@@ -20,6 +20,9 @@ def is_manager(user):
 def is_user(user):
     return user.groups.filter(name="User").exists()
 
+def is_manager_or_admin(user):
+    return  is_manager(user) or is_admin(user)
+
 # Create your views here.
 def sign_up(request):
     form = CustomRegisterForm()  
