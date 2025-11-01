@@ -16,6 +16,7 @@ from django.urls import reverse_lazy
 # Create your views here.
 create_detorator = [login_required,user_passes_test(is_manager)]
 
+""" Function base view"""
 @login_required
 @user_passes_test(is_manager, login_url="no-permission")
 def new_project_create(request):
