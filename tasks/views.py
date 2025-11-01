@@ -4,7 +4,7 @@ from tasks.models import *
 from django.db.models import Q , Count
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test ,login_required , permission_required
-from users.views import is_manager , is_admin ,is_user
+from users.views import is_manager , is_admin ,is_user ,is_manager_or_admin
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin 
@@ -14,22 +14,10 @@ from django.views.generic import ListView ,DetailView ,CreateView , DeleteView
 from tasks.forms import CreateProject ,CreateTask , CreateEmployee , CreateTaskDetails
 from django.urls import reverse_lazy
 # Create your views here.
-create_detorator = [login_required,user_passes_test(is_manager)]
 
-@login_required
-@user_passes_test(is_manager, login_url="no-permission")
-def new_project_create(request):
-    if request.method == "POST":
-        form = CreateProject(request.POST)
-        if form.is_valid():
-            form.save()
-            return render(request,'form.html',{'form':form})
-    else:
-        form = CreateProject()
-    return render(request,'form.html',{'form':form})
-
+create_decorator = [login_required,user_passes_test(is_manager_or_admin, login_url="no-permission")]
 # create new project:
-@method_decorator(create_detorator , name="dispatch")
+@method_decorator(create_decorator , name="dispatch")
 class CreateProject(CreateView):
     model = Project
     fields = "__all__"
@@ -51,30 +39,8 @@ class ViewProject(ListView):
         return Project.objects.annotate( count = Count("task"))
 
 
-# task:
-@login_required
-@user_passes_test(is_manager, login_url="no-permission")
-def new_task_create(request):
-    if request.method == "POST":
-        task_form = CreateTask(request.POST)
-        details_form = CreateTaskDetails(request.POST , request.FILES)
-        if task_form.is_valid() and details_form.is_valid():
-            task = task_form.save()
-            task_details = details_form.save(commit=False)
-            task_details.task = task
-            task_details.save()
-        
-        messages.success(request,"task create successfully")
-        return redirect('create_task')   
-        
-    else:
-        task_form = CreateTask()
-        details_form = CreateTaskDetails()
-    return render(request,'task_form.html',{'task_form':task_form,'details_form':details_form})
-create_decorator = [login_required,user_passes_test(is_manager, login_url="no-permission")]
-
 # class base create task:
-# @method_decorator(create_decorator, name='dispatch')
+@method_decorator(create_decorator, name='dispatch')
 class CreateTaskView(LoginRequiredMixin,View):
 
     def get(self,request,*args,**kwargs):
@@ -98,6 +64,7 @@ class CreateTaskView(LoginRequiredMixin,View):
             return redirect("create_task")
 
 # details task:
+@method_decorator(create_decorator, name="dispatch")
 class DetailsTaskView(DetailView):
     model = Task
     template_name = "task_details.html"
@@ -114,32 +81,6 @@ class DetailsTaskView(DetailView):
         task.status = select_status
         task.save()
         return redirect('task', task.id)
-    
-# updated task:
-@login_required
-@user_passes_test(is_manager, login_url="no-permission")
-def updated_task(request , id):
-    # find the task by id:
-    instance_task = get_object_or_404(Task,id=id)
-    # details_form = CreateTaskDetails()
-    instance_task_details = getattr(instance_task,'details',None)
-
-    if request.method == "POST":
-        task_form = CreateTask(request.POST ,instance=instance_task)
-        details_form = CreateTaskDetails(request.POST ,instance= instance_task_details)
-        if task_form.is_valid() and details_form.is_valid():
-            task = task_form.save()
-            task_details = details_form.save(commit=False)
-            task_details.task = task
-            task_details.save()
-        messages.success(request,"task updated successfully")
-        return redirect('task',id)   
-    else:
-        # populate the task and details:
-        task_form = CreateTask(instance=instance_task)
-        details_form = CreateTaskDetails(instance=instance_task_details)
-
-    return render(request,'form.html',{'task_form':task_form,'details_form':details_form})
 
 @method_decorator(create_decorator,name="dispatch")
 class UpdateTask(LoginRequiredMixin, ContextMixin,View):
@@ -170,34 +111,20 @@ class UpdateTask(LoginRequiredMixin, ContextMixin,View):
             messages.success(request,"task updated successfully")
             return redirect('task',id)   
 
-# delete task:
-@login_required
-@user_passes_test(is_manager, login_url="no-permission")
-def delete_task(request,id):
-    if request.method == "POST":
-        task = Task.objects.get(id = id)
-        task.delete()
-        messages.success(request,"Task Deleted Successfully")
-        return redirect("dashboard")
-    else:
-        messages.error(request,"Somthing wrong found")
-        return redirect('dashboard')
+@method_decorator(create_decorator, name="dispatch")
+class DeleteTaskView(DeleteView):
+    model = Task
+    pk_url_kwarg = "id"
+    success_url = reverse_lazy("dashboard")
 
-class DeleteTask(DeleteView):
-    medel = Task
+# Employee
+@method_decorator(create_decorator, name="dispatch")
+class CreateEmployeeRegister(CreateView):
+    model = Employee
+    template_name = "form.html"
+    form_class = CreateEmployee
+    success_url = reverse_lazy('dashboard')
 
-
-@login_required
-@user_passes_test(is_manager, login_url="no-permission")
-def EmployeeRegister(request):
-    if request.method == "POST":
-        form = CreateEmployee(request.POST)
-        if form.is_valid():
-            form.save()
-        return render(request,'form.html',{'form':form,'message':"Successfully Submitted"})
-    else:
-        form = CreateEmployee()
-    return render(request,'form.html',{'form':form})
 
 @login_required
 @user_passes_test(is_manager, login_url="no-permission")
@@ -212,21 +139,10 @@ def makeDetails(request):
     return render(request,'form.html',{'form':form})
 
 def Test(request):
-    # data = Task.objects.all()
-    # data = Task.objects.filter(due_date = datetime.today())
-    # data = Task.objects.filter(status = "COMPLETED")
-    # data = Task.objects.filter(status = "IN-PROCESS")
-    # data = Task.objects.exclude(status = "PENDING")
-    # data = Task.objects.filter(status__icontains = "pendinG")
-    # data = Task.objects.filter(Q(status = "PENDING") | Q(status = "IN_PROCESS"))
     data = Task.objects.select_related('details').all()
     data = TaskDetails.objects.select_related('task').all()
-
-    
     data = Task.objects.prefetch_related('assigne_to').all()
-    
     data = Task.objects.aggregate(num_task = Count('id'))
-    
     data = Task.objects.annotate(num_task = Count('id'))
     return render(request,'test.html',{'tests':data})
 
