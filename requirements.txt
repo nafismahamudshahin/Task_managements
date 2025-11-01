@@ -1,0 +1,6 @@
+asgiref==3.10.0
+Django==5.2.7
+-e git+https://github.com/django-commons/django-debug-toolbar.git@62ef5021a033c43a6d0ae418f16be1fd3e420cee#egg=django_debug_toolbar
+pillow==12.0.0
+python-decouple==3.8
+sqlparse==0.5.3

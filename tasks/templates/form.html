@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Document</title>
+</head>
+<body>
+    <section class="w-1/2 mx-auto mt-8">
+        {% if messages %}
+            {% for message in messages %}
+                <h1>{{message}}</h1>
+            {% endfor %}
+        {% endif %}
+        {% comment %} form {% endcomment %}
+        <form action="" method="POST" enctype="multipart/form_data">
+            {% csrf_token %}
+            {% if form %}
+                {{form}}
+            {% endif %}
+            {% if task_form %}
+                {{task_form}}
+            {% endif %}
+
+            {% if details_form %}
+                {{details_form}}
+            {% endif %}
+            <button type="submit" class="bg-blue-500 px-3 py-2 text-white mt-2 rounded-md">Submit</button>
+        </form>
+        <div>
+            {% if message %}
+                {{message}}
+            {% endif %}
+        </div>
+    </section>
+</body>
+</html>

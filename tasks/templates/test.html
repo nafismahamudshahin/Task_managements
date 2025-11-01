@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <h1 class="content">hello world this is test.</h1>
+    {% for task in tests %}
+        <p><b>T:{{task.num_task}}</b></p>
+        {% comment %} <p><b>D:{{task.assigne_to.salary}}</b></p> {% endcomment %}
+    {% endfor %}
+    {% comment %} {{tests.num_task}} {% endcomment %}
+</body>
+</html>
