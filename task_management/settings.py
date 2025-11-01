@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     'users',
     'core',
     'debug_toolbar',
-    'viewbase',
 ]
 
 MIDDLEWARE = [

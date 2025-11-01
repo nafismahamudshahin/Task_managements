@@ -11,7 +11,6 @@ urlpatterns = [
     path('',include('tasks.urls')),
     path('',include('users.urls')),
     path('',home,name="home"),
-    path('',include('viewbase.urls')),
 ] + debug_toolbar_urls()
 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
